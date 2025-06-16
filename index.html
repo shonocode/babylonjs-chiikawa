@@ -1,0 +1,305 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>Babylon.js Chiikawa</title>
+
+    <!-- Babylon.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+    <script src="https://cdn.babylonjs.com/recast.js"></script>
+    <script src="https://cdn.babylonjs.com/ammo.js"></script>
+    <script src="https://cdn.babylonjs.com/havok/HavokPhysics_umd.js"></script>
+    <script src="https://cdn.babylonjs.com/cannon.js"></script>
+    <script src="https://cdn.babylonjs.com/Oimo.js"></script>
+    <script src="https://cdn.babylonjs.com/earcut.min.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://cdn.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://cdn.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://cdn.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://cdn.babylonjs.com/addons/babylonjs.addons.min.js"></script>
+    <script src="https://cdn.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+    <style>
+        html,
+        body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        #canvasZone {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        }
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+
+            const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 8, BABYLON.Vector3.Zero());
+            camera.attachControl(canvas, true);
+            camera.wheelDeltaPercentage = 0.1;
+
+            const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0));
+
+            const head = BABYLON.MeshBuilder.CreateSphere("head", { diameterX: 0.6, diameterY: 0.5, diameterZ: 0.4 }, scene);
+
+            const body = BABYLON.MeshBuilder.CreateSphere("body", { diameterX: 0.5, diameterY: 0.6, diameterZ: 0.3, slice: 0.5 }, scene);
+            body.rotation.x = Math.PI;
+            body.position.y = -0.13;
+
+            const rightEar = BABYLON.MeshBuilder.CreateSphere("rightEar", { diameterX: 0.16, diameterY: 0.16, diameterZ: 0.08, slice: 0.5 }, scene);
+            rightEar.rotation.z = -Math.PI / 6;
+            rightEar.position = new BABYLON.Vector3(0.18, 0.18, 0);
+
+            const leftEar = BABYLON.MeshBuilder.CreateSphere("leftEar", { diameterX: 0.16, diameterY: 0.16, diameterZ: 0.08, slice: 0.5 }, scene);
+            leftEar.rotation.z = Math.PI / 6;
+            leftEar.position = new BABYLON.Vector3(-0.18, 0.18, 0);
+
+            const rightArm = BABYLON.MeshBuilder.CreateCapsule("rightArm", { height: 0.2, radius: 0.05 }, scene);
+            rightArm.position = new BABYLON.Vector3(0.25, -0.2, 0);
+            rightArm.rotation.z = Math.PI / 5;
+
+            const leftArm = BABYLON.MeshBuilder.CreateCapsule("leftArm", { height: 0.2, radius: 0.05 }, scene);
+            leftArm.position = new BABYLON.Vector3(-0.25, -0.2, 0);
+            leftArm.rotation.z = -Math.PI / 5;
+
+            const rightLeg = BABYLON.MeshBuilder.CreateCapsule("rightLeg", { height: 0.15, radius: 0.05 }, scene);
+            rightLeg.position = new BABYLON.Vector3(0.1, -0.4, 0);
+
+            const leftLeg = BABYLON.MeshBuilder.CreateCapsule("leftLeg", { height: 0.15, radius: 0.05 }, scene);
+            leftLeg.position = new BABYLON.Vector3(-0.1, -0.4, 0);
+
+            const eyeTexture = new BABYLON.DynamicTexture("eyeTexture", { width: 100, height: 100 }, scene);
+            eyeTexture.hasAlpha = true;
+
+            const eyeCtx = eyeTexture.getContext();
+            // 目
+            eyeCtx.fillStyle = '#000000';
+            eyeCtx.beginPath();
+            eyeCtx.arc(100 / 2, 100 / 2, 100 / 3, 0, Math.PI * 2);
+            eyeCtx.fill();
+
+            // ハイライト
+            eyeCtx.fillStyle = '#ffffff';
+            eyeCtx.beginPath();
+            eyeCtx.arc(100 / 2, 100 / 2 - 100 / 8, 100 / 6, 0, Math.PI * 2);
+            eyeCtx.fill();
+
+            // ハイライト
+            eyeCtx.strokeStyle = '#ffffff';
+            eyeCtx.lineWidth = 8;
+            eyeCtx.beginPath();
+            eyeCtx.arc(100 / 2, 100 / 2, 100 / 4, Math.PI / 4, 3 * Math.PI / 4);
+            eyeCtx.stroke();
+
+            eyeTexture.update();
+
+            const eyeMaterial = new BABYLON.StandardMaterial("eyeMat", scene);
+            eyeMaterial.diffuseTexture = eyeTexture;
+
+            const rightEye = BABYLON.DecalBuilder.CreateDecal("rightEye", head, {
+                position: new BABYLON.Vector3(0.1, 0.05, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            rightEye.material = eyeMaterial;
+
+            const leftEye = BABYLON.DecalBuilder.CreateDecal("leftEye", head, {
+                position: new BABYLON.Vector3(-0.1, 0.05, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            leftEye.material = eyeMaterial;
+
+            const rightEyebrowTexture = new BABYLON.DynamicTexture("rightEyebrowTexture", { width: 100, height: 100 }, scene);
+            rightEyebrowTexture.hasAlpha = true;
+
+            const rightEyebrowCtx = rightEyebrowTexture.getContext();
+            rightEyebrowCtx.strokeStyle = '#000000';
+            rightEyebrowCtx.lineWidth = 8;
+            rightEyebrowCtx.beginPath();
+            rightEyebrowCtx.moveTo(0, 50);
+            rightEyebrowCtx.quadraticCurveTo(10, 40, 50, 40);
+            rightEyebrowCtx.stroke();
+
+            rightEyebrowTexture.update();
+
+            const rightEyebrowMaterial = new BABYLON.StandardMaterial("rightEyebrowMat", scene);
+            rightEyebrowMaterial.diffuseTexture = rightEyebrowTexture;
+
+            const rightEyebrow = BABYLON.DecalBuilder.CreateDecal("rightEyebrow", head, {
+                position: new BABYLON.Vector3(0.08, 0.12, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            rightEyebrow.material = rightEyebrowMaterial;
+
+            const leftEyebrowTexture = new BABYLON.DynamicTexture("leftEyebrowTexture", { width: 100, height: 100 }, scene);
+            leftEyebrowTexture.hasAlpha = true;
+
+            const leftEyebrowCtx = leftEyebrowTexture.getContext();
+            leftEyebrowCtx.strokeStyle = '#000000';
+            leftEyebrowCtx.lineWidth = 8;
+            leftEyebrowCtx.beginPath();
+            leftEyebrowCtx.moveTo(100, 50);
+            leftEyebrowCtx.quadraticCurveTo(90, 40, 50, 40);
+            leftEyebrowCtx.stroke();
+
+            leftEyebrowTexture.update();
+
+            const leftEyebrowMaterial = new BABYLON.StandardMaterial("leftEyebrowMat", scene);
+            leftEyebrowMaterial.diffuseTexture = leftEyebrowTexture;
+
+            const leftEyebrow = BABYLON.DecalBuilder.CreateDecal("leftEyebrow", head, {
+                position: new BABYLON.Vector3(-0.08, 0.12, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            leftEyebrow.material = leftEyebrowMaterial;
+
+            const mouthTexture = new BABYLON.DynamicTexture("mouthTexture", { width: 100, height: 100 }, scene);
+            mouthTexture.hasAlpha = true;
+
+            const mouthCtx = mouthTexture.getContext();
+            mouthCtx.strokeStyle = '#000000';
+            mouthCtx.lineWidth = 8;
+            mouthCtx.beginPath();
+            mouthCtx.moveTo(0, 75);
+            mouthCtx.bezierCurveTo(20, 100, 40, 100, 50, 60);
+            mouthCtx.bezierCurveTo(60, 100, 80, 100, 100, 75);
+            mouthCtx.stroke();
+
+            mouthTexture.update();
+
+            const mouthMaterial = new BABYLON.StandardMaterial("mouthMat", scene);
+            mouthMaterial.diffuseTexture = mouthTexture;
+
+            const mouth = BABYLON.DecalBuilder.CreateDecal("mouth", head, {
+                position: new BABYLON.Vector3(0, 0.0, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            mouth.material = mouthMaterial;
+
+            const jawTexture = new BABYLON.DynamicTexture("jawTexture", { width: 100, height: 100 }, scene);
+            jawTexture.hasAlpha = true;
+
+            const jawCtx = jawTexture.getContext();
+            jawCtx.strokeStyle = '#000000';
+            jawCtx.lineWidth = 8;
+            jawCtx.beginPath();
+            jawCtx.moveTo(40, 50);
+            jawCtx.bezierCurveTo(45, 60, 55, 60, 60, 50);
+            jawCtx.stroke();
+
+            jawTexture.update();
+
+            const jawMaterial = new BABYLON.StandardMaterial("jawMat", scene);
+            jawMaterial.diffuseTexture = jawTexture;
+
+            const jaw = BABYLON.DecalBuilder.CreateDecal("jaw", head, {
+                position: new BABYLON.Vector3(0, -0.06, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            jaw.material = jawMaterial;
+
+            const cheekTexture = new BABYLON.DynamicTexture("cheekTexture", { width: 100, height: 100 }, scene);
+            cheekTexture.hasAlpha = true;
+
+            const cheekCtx = cheekTexture.getContext();
+            cheekCtx.fillStyle = '#FFC0CB';
+            cheekCtx.beginPath();
+            cheekCtx.ellipse(50, 50, 40, 30, 0, 0, 2 * Math.PI);
+            cheekCtx.fill();
+            cheekCtx.beginPath();
+            cheekCtx.font = "bold 50px Arial";
+            cheekCtx.fillStyle = '#000000';
+            cheekCtx.fillText("////", 22, 67);
+
+            cheekTexture.update();
+
+            const cheekMaterial = new BABYLON.StandardMaterial("cheekMat", scene);
+            cheekMaterial.diffuseTexture = cheekTexture;
+
+            const rightCheek = BABYLON.DecalBuilder.CreateDecal("rightCheek", head, {
+                position: new BABYLON.Vector3(0.15, -0.03, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            rightCheek.material = cheekMaterial;
+
+            const leftCheek = BABYLON.DecalBuilder.CreateDecal("leftCheek", head, {
+                position: new BABYLON.Vector3(-0.15, -0.03, 0.1),
+                normal: new BABYLON.Vector3(0, 0, 1),
+                size: new BABYLON.Vector3(0.1, 0.1, 0.5)
+            });
+            leftCheek.material = cheekMaterial;
+
+            return scene;
+        };
+        window.initFunction = async function () {
+            var asyncEngineCreation = async function () {
+                try {
+                    return createDefaultEngine();
+                } catch (e) {
+                    console.log("the available createEngine function failed. Creating the default engine instead");
+                    return createDefaultEngine();
+                }
+            }
+
+            window.engine = await asyncEngineCreation();
+
+            const engineOptions = window.engine.getCreationOptions?.();
+            if (!engineOptions || engineOptions.audioEngine !== false) {
+
+            }
+            if (!engine) throw 'engine should not be null.';
+            startRenderLoop(engine, canvas);
+            window.scene = createScene();
+        };
+        initFunction().then(() => {
+            sceneToRender = scene
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>
