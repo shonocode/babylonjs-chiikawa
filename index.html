@@ -68,39 +68,56 @@
         const createScene = function () {
             const scene = new BABYLON.Scene(engine);
 
-            const camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 8, BABYLON.Vector3.Zero());
+            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 8, BABYLON.Vector3.Zero());
             camera.attachControl(canvas, true);
             camera.wheelDeltaPercentage = 0.1;
 
-            const light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0));
+            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
+
+            const bodyMaterial = new BABYLON.StandardMaterial('bodyMaterial', scene);
+            bodyMaterial.diffuseColor = new BABYLON.Color3(1, 1, 1);
+            bodyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
 
             const head = BABYLON.MeshBuilder.CreateSphere("head", { diameterX: 0.6, diameterY: 0.5, diameterZ: 0.4 }, scene);
+            head.material = bodyMaterial;
 
-            const body = BABYLON.MeshBuilder.CreateSphere("body", { diameterX: 0.5, diameterY: 0.6, diameterZ: 0.3, slice: 0.5 }, scene);
-            body.rotation.x = Math.PI;
-            body.position.y = -0.13;
+            const torso = BABYLON.MeshBuilder.CreateSphere("torso", { diameterX: 0.5, diameterY: 0.6, diameterZ: 0.3, slice: 0.5 }, scene);
+            torso.material = bodyMaterial;
+            torso.rotation.x = Math.PI;
+            torso.position.y = -0.13;
 
-            const rightEar = BABYLON.MeshBuilder.CreateSphere("rightEar", { diameterX: 0.16, diameterY: 0.16, diameterZ: 0.08, slice: 0.5 }, scene);
+            const rightEar = BABYLON.MeshBuilder.CreateSphere("rightEar", { diameterX: 0.12, diameterY: 0.12, diameterZ: 0.06, slice: 0.5 }, scene);
+            rightEar.material = bodyMaterial;
             rightEar.rotation.z = -Math.PI / 6;
             rightEar.position = new BABYLON.Vector3(0.18, 0.18, 0);
 
-            const leftEar = BABYLON.MeshBuilder.CreateSphere("leftEar", { diameterX: 0.16, diameterY: 0.16, diameterZ: 0.08, slice: 0.5 }, scene);
+            const leftEar = BABYLON.MeshBuilder.CreateSphere("leftEar", { diameterX: 0.12, diameterY: 0.12, diameterZ: 0.06, slice: 0.5 }, scene);
+            leftEar.material = bodyMaterial;
             leftEar.rotation.z = Math.PI / 6;
             leftEar.position = new BABYLON.Vector3(-0.18, 0.18, 0);
 
-            const rightArm = BABYLON.MeshBuilder.CreateCapsule("rightArm", { height: 0.2, radius: 0.05 }, scene);
+            const rightArm = BABYLON.MeshBuilder.CreateCapsule("rightArm", { height: 0.2, radius: 0.03 }, scene);
+            rightArm.material = bodyMaterial;
             rightArm.position = new BABYLON.Vector3(0.25, -0.2, 0);
             rightArm.rotation.z = Math.PI / 5;
 
-            const leftArm = BABYLON.MeshBuilder.CreateCapsule("leftArm", { height: 0.2, radius: 0.05 }, scene);
+            const leftArm = BABYLON.MeshBuilder.CreateCapsule("leftArm", { height: 0.2, radius: 0.03 }, scene);
+            leftArm.material = bodyMaterial;
             leftArm.position = new BABYLON.Vector3(-0.25, -0.2, 0);
             leftArm.rotation.z = -Math.PI / 5;
 
-            const rightLeg = BABYLON.MeshBuilder.CreateCapsule("rightLeg", { height: 0.15, radius: 0.05 }, scene);
+            const rightLeg = BABYLON.MeshBuilder.CreateCapsule("rightLeg", { height: 0.15, radius: 0.03 }, scene);
+            rightLeg.material = bodyMaterial;
             rightLeg.position = new BABYLON.Vector3(0.1, -0.4, 0);
 
-            const leftLeg = BABYLON.MeshBuilder.CreateCapsule("leftLeg", { height: 0.15, radius: 0.05 }, scene);
+            const leftLeg = BABYLON.MeshBuilder.CreateCapsule("leftLeg", { height: 0.15, radius: 0.03 }, scene);
+            leftLeg.material = bodyMaterial;
             leftLeg.position = new BABYLON.Vector3(-0.1, -0.4, 0);
+
+            const tail = BABYLON.MeshBuilder.CreateSphere("tail", { diameterX: 0.08, diameterY: 0.08, diameterZ: 0.08 }, scene);
+            tail.material = bodyMaterial;
+            tail.position = new BABYLON.Vector3(0, -0.35, -0.13);
+            tail.rotation.x = -2 * Math.PI / 3;
 
             const eyeTexture = new BABYLON.DynamicTexture("eyeTexture", { width: 100, height: 100 }, scene);
             eyeTexture.hasAlpha = true;
@@ -129,6 +146,7 @@
 
             const eyeMaterial = new BABYLON.StandardMaterial("eyeMat", scene);
             eyeMaterial.diffuseTexture = eyeTexture;
+            eyeMaterial.zOffset = -1;
 
             const rightEye = BABYLON.DecalBuilder.CreateDecal("rightEye", head, {
                 position: new BABYLON.Vector3(0.1, 0.05, 0.1),
@@ -159,6 +177,7 @@
 
             const rightEyebrowMaterial = new BABYLON.StandardMaterial("rightEyebrowMat", scene);
             rightEyebrowMaterial.diffuseTexture = rightEyebrowTexture;
+            rightEyebrowMaterial.zOffset = -1;
 
             const rightEyebrow = BABYLON.DecalBuilder.CreateDecal("rightEyebrow", head, {
                 position: new BABYLON.Vector3(0.08, 0.12, 0.1),
@@ -182,6 +201,7 @@
 
             const leftEyebrowMaterial = new BABYLON.StandardMaterial("leftEyebrowMat", scene);
             leftEyebrowMaterial.diffuseTexture = leftEyebrowTexture;
+            leftEyebrowMaterial.zOffset = -1;
 
             const leftEyebrow = BABYLON.DecalBuilder.CreateDecal("leftEyebrow", head, {
                 position: new BABYLON.Vector3(-0.08, 0.12, 0.1),
@@ -206,6 +226,7 @@
 
             const mouthMaterial = new BABYLON.StandardMaterial("mouthMat", scene);
             mouthMaterial.diffuseTexture = mouthTexture;
+            mouthMaterial.zOffset = -1;
 
             const mouth = BABYLON.DecalBuilder.CreateDecal("mouth", head, {
                 position: new BABYLON.Vector3(0, 0.0, 0.1),
@@ -229,6 +250,7 @@
 
             const jawMaterial = new BABYLON.StandardMaterial("jawMat", scene);
             jawMaterial.diffuseTexture = jawTexture;
+            jawMaterial.zOffset = -1;
 
             const jaw = BABYLON.DecalBuilder.CreateDecal("jaw", head, {
                 position: new BABYLON.Vector3(0, -0.06, 0.1),
@@ -254,6 +276,7 @@
 
             const cheekMaterial = new BABYLON.StandardMaterial("cheekMat", scene);
             cheekMaterial.diffuseTexture = cheekTexture;
+            cheekMaterial.zOffset = -1;
 
             const rightCheek = BABYLON.DecalBuilder.CreateDecal("rightCheek", head, {
                 position: new BABYLON.Vector3(0.15, -0.03, 0.1),
