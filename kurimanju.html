@@ -177,6 +177,7 @@
 
             const hairMaterial = new BABYLON.StandardMaterial("hairMat", scene);
             hairMaterial.diffuseTexture = hairTexture;
+            hairMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
             hairMaterial.zOffset = -1;
 
             const hair = BABYLON.DecalBuilder.CreateDecal("hair", head, {
