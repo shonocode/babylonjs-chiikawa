@@ -66,61 +66,173 @@
         var sceneToRender = null;
         var createDefaultEngine = function () { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); };
         const createScene = function () {
-            const scene = new BABYLON.Scene(engine);
-            // scene.debugLayer.show({ embedMode: true });
+            try {
+                const scene = new BABYLON.Scene(engine);
+                scene.debugLayer.show({ embedMode: true });
 
-            const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 8, BABYLON.Vector3.Zero());
-            camera.attachControl(canvas, true);
-            camera.wheelDeltaPercentage = 0.05;
+                const camera = new BABYLON.ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2, 8, BABYLON.Vector3.Zero());
+                camera.attachControl(canvas, true);
+                camera.wheelDeltaPercentage = 0.05;
 
-            const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
+                const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
 
-            const bodyMaterial = new BABYLON.StandardMaterial('bodyMaterial', scene);
-            bodyMaterial.diffuseColor = new BABYLON.Color3(1, 0.92, 0.78);
-            bodyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+                const bodyMaterial = new BABYLON.StandardMaterial('bodyMaterial', scene);
+                bodyMaterial.diffuseColor = new BABYLON.Color3(1, 0.92, 0.78);
+                bodyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
 
-            const head = BABYLON.MeshBuilder.CreateSphere("head", { diameterX: 0.6, diameterY: 0.5, diameterZ: 0.4 }, scene);
-            head.material = bodyMaterial;
+                const skeleton = new BABYLON.Skeleton("kmjSkeleton", "kmjSkeleton", scene);
 
-            const torso = BABYLON.MeshBuilder.CreateSphere("torso", { diameterX: 0.5, diameterY: 0.6, diameterZ: 0.3, slice: 0.5 }, scene);
-            torso.material = bodyMaterial;
-            torso.rotation.x = Math.PI;
-            torso.position.y = -0.13;
+                const head = BABYLON.MeshBuilder.CreateSphere("head", { diameterX: 0.6, diameterY: 0.5, diameterZ: 0.4 }, scene);
+                head.material = bodyMaterial;
 
-            const rightEar = BABYLON.MeshBuilder.CreateSphere("rightEar", { diameterX: 0.08, diameterY: 0.15, diameterZ: 0.06, slice: 0.5 }, scene);
-            rightEar.material = bodyMaterial;
-            rightEar.rotation.z = -Math.PI / 3;
-            rightEar.position = new BABYLON.Vector3(0.25, 0.1, 0);
+                const torso = BABYLON.MeshBuilder.CreateSphere("torso", { diameterX: 0.5, diameterY: 0.6, diameterZ: 0.3, slice: 0.5 }, scene);
+                torso.material = bodyMaterial;
+                torso.rotation.x = Math.PI;
+                torso.position.y = head.position.y - 0.13;
 
-            const leftEar = BABYLON.MeshBuilder.CreateSphere("leftEar", { diameterX: 0.08, diameterY: 0.15, diameterZ: 0.06, slice: 0.5 }, scene);
-            leftEar.material = bodyMaterial;
-            leftEar.rotation.z = Math.PI / 3;
-            leftEar.position = new BABYLON.Vector3(-0.25, 0.1, 0);
+                const leftEar = BABYLON.MeshBuilder.CreateSphere("leftEar", { diameterX: 0.08, diameterY: 0.15, diameterZ: 0.06, slice: 0.5 }, scene);
+                leftEar.material = bodyMaterial;
+                leftEar.rotation.z = Math.PI / 3;
+                leftEar.position = new BABYLON.Vector3(-0.25, 0.1, 0);
 
-            const rightArm = BABYLON.MeshBuilder.CreateCapsule("rightArm", { height: 0.2, radius: 0.03 }, scene);
-            rightArm.material = bodyMaterial;
-            rightArm.position = new BABYLON.Vector3(0.25, -0.2, 0);
-            rightArm.rotation.z = Math.PI / 5;
+                const rightEar = BABYLON.MeshBuilder.CreateSphere("rightEar", { diameterX: 0.08, diameterY: 0.15, diameterZ: 0.06, slice: 0.5 }, scene);
+                rightEar.material = bodyMaterial;
+                rightEar.rotation.z = -Math.PI / 3;
+                rightEar.position = new BABYLON.Vector3(0.25, 0.1, 0);
 
-            const leftArm = BABYLON.MeshBuilder.CreateCapsule("leftArm", { height: 0.2, radius: 0.03 }, scene);
-            leftArm.material = bodyMaterial;
-            leftArm.position = new BABYLON.Vector3(-0.25, -0.2, 0);
-            leftArm.rotation.z = -Math.PI / 5;
+                const tail = BABYLON.MeshBuilder.CreateSphere("tail", { diameterX: 0.05, diameterY: 0.09, diameterZ: 0.06 }, scene);
+                tail.material = bodyMaterial;
+                tail.position = new BABYLON.Vector3(0, -0.35, -0.13);
+                tail.rotation.x = -2 * Math.PI / 3;
 
-            const rightLeg = BABYLON.MeshBuilder.CreateCapsule("rightLeg", { height: 0.15, radius: 0.03 }, scene);
-            rightLeg.material = bodyMaterial;
-            rightLeg.position = new BABYLON.Vector3(0.1, -0.4, 0);
+                const chest = BABYLON.Mesh.MergeMeshes([head, torso, leftEar, rightEar, tail], true, true, undefined, false, true);
 
-            const leftLeg = BABYLON.MeshBuilder.CreateCapsule("leftLeg", { height: 0.15, radius: 0.03 }, scene);
-            leftLeg.material = bodyMaterial;
-            leftLeg.position = new BABYLON.Vector3(-0.1, -0.4, 0);
+                const rootBone = new BABYLON.Bone("rootBone", skeleton, null, BABYLON.Matrix.Identity());
+                const hipBone = new BABYLON.Bone("hip", skeleton, rootBone, BABYLON.Matrix.Translation(0, -0.4, 0));
+                const spineBone = new BABYLON.Bone("spine", skeleton, hipBone, BABYLON.Matrix.Translation(0, 0.15, 0));
+                const neckBone = new BABYLON.Bone("neck", skeleton, spineBone, BABYLON.Matrix.Translation(0, 0.15, 0));
 
-            const tail = BABYLON.MeshBuilder.CreateSphere("tail", { diameterX: 0.05, diameterY: 0.09, diameterZ: 0.06 }, scene);
-            tail.material = bodyMaterial;
-            tail.position = new BABYLON.Vector3(0, -0.35, -0.13);
-            tail.rotation.x = -2 * Math.PI / 3;
-            scene.debugLayer.show();
+                setVertexDataForChestBones(chest, skeleton, hipBone, spineBone, neckBone);
 
+                const leftArm = BABYLON.MeshBuilder.CreateCapsule("leftArm", { height: 0.2, radius: 0.03 }, scene);
+                leftArm.material = bodyMaterial;
+
+                const leftUpperArmBone = new BABYLON.Bone("leftUpperArm", skeleton, spineBone, BABYLON.Matrix.Translation(-0.22, 0.1, 0));
+                const leftForeArmBone = new BABYLON.Bone("leftForeArm", skeleton, leftUpperArmBone, BABYLON.Matrix.Translation(-0.05, -0.07, 0));
+                const leftHandBone = new BABYLON.Bone("leftHand", skeleton, leftForeArmBone, BABYLON.Matrix.Translation(-0.03, -0.05, 0));
+
+                setVertexDataForLimbBones(leftArm, skeleton, leftUpperArmBone, leftForeArmBone);
+
+                leftArm.position = new BABYLON.Vector3(-0.25, -0.2, 0);
+                leftArm.rotation.z = -Math.PI / 5;
+
+                const rightArm = BABYLON.MeshBuilder.CreateCapsule("rightArm", { height: 0.2, radius: 0.03 }, scene);
+                rightArm.material = bodyMaterial;
+
+                const rightUpperArmBone = new BABYLON.Bone("rightUpperArm", skeleton, spineBone, BABYLON.Matrix.Translation(0.22, 0.1, 0));
+                const rightForeArmBone = new BABYLON.Bone("rightForeArm", skeleton, rightUpperArmBone, BABYLON.Matrix.Translation(0.05, -0.07, 0));
+                const rightHandBone = new BABYLON.Bone("rightHand", skeleton, rightForeArmBone, BABYLON.Matrix.Translation(0.03, -0.05, 0));
+
+                setVertexDataForLimbBones(rightArm, skeleton, rightUpperArmBone, rightForeArmBone);
+
+                rightArm.position = new BABYLON.Vector3(0.25, -0.2, 0);
+                rightArm.rotation.z = Math.PI / 5;
+
+                const leftLeg = BABYLON.MeshBuilder.CreateCapsule("leftLeg", { height: 0.15, radius: 0.03 }, scene);
+                leftLeg.material = bodyMaterial;
+
+                const leftUpperLegBone = new BABYLON.Bone("leftUpperLegBone", skeleton, hipBone, BABYLON.Matrix.Translation(-0.1, 0.04, 0));
+                const leftLowerLegBone = new BABYLON.Bone("leftLowerLegBone", skeleton, leftUpperLegBone, BABYLON.Matrix.Translation(0, -0.06, 0));
+                const leftFootBone = new BABYLON.Bone("leftFootBone", skeleton, leftLowerLegBone, BABYLON.Matrix.Translation(0, -0.06, 0));
+                setVertexDataForLimbBones(leftLeg, skeleton, leftUpperLegBone, leftLowerLegBone);
+
+                leftLeg.position = new BABYLON.Vector3(-0.1, -0.42, 0);
+
+                const rightLeg = BABYLON.MeshBuilder.CreateCapsule("rightLeg", { height: 0.15, radius: 0.03 }, scene);
+                rightLeg.material = bodyMaterial;
+
+                const rightUpperLegBone = new BABYLON.Bone("rightUpperLegBone", skeleton, hipBone, BABYLON.Matrix.Translation(0.1, 0.04, 0));
+                const rightLowerLegBone = new BABYLON.Bone("rightLowerLegBone", skeleton, rightUpperLegBone, BABYLON.Matrix.Translation(0, -0.06, 0));
+                const rightFootBone = new BABYLON.Bone("rightFootBone", skeleton, rightLowerLegBone, BABYLON.Matrix.Translation(0, -0.06, 0));
+                setVertexDataForLimbBones(rightLeg, skeleton, rightUpperLegBone, rightLowerLegBone)
+
+                rightLeg.position = new BABYLON.Vector3(0.1, -0.42, 0);
+
+                const body = BABYLON.Mesh.MergeMeshes([chest, leftArm, rightArm, leftLeg, rightLeg], true, true, undefined, false, true);
+                body.skeleton = skeleton;
+
+                createFace(body, scene);
+
+                const boundingInfo = body.getBoundingInfo();
+                const minY = boundingInfo.boundingBox.minimumWorld.y;
+                body.position.y -= minY;
+
+                createWaveAnimation(skeleton, scene);
+                // drinkAnim(body, skeleton, scene);
+
+                return scene;
+            } catch (e) {
+                console.log(e);
+            }
+        };
+
+        const setVertexDataForChestBones = (mesh, skeleton, hipBone, spineBone, neckBone) => {
+            const boneIndices = [];
+            const boneWeights = [];
+            const meshPos = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            let j = 0
+
+            const NECK_BOUND = -0.1;
+            const SPINE_BOUND = -0.25;
+
+            for (let i = 0; i < mesh.getTotalVertices(); ++i) {
+                const x = meshPos[j];
+                const y = meshPos[j + 1];
+                const z = meshPos[j + 2];
+
+                if (y > NECK_BOUND) {
+                    boneIndices.push(skeleton.bones.indexOf(hipBone), skeleton.bones.indexOf(spineBone), skeleton.bones.indexOf(neckBone), 0);
+                    boneWeights.push(0, 0, 1, 0);
+                } else if (y > SPINE_BOUND) {
+                    boneIndices.push(skeleton.bones.indexOf(hipBone), skeleton.bones.indexOf(spineBone), skeleton.bones.indexOf(neckBone), 0);
+                    boneWeights.push(0, 1, 0, 0);
+                } else {
+                    boneIndices.push(skeleton.bones.indexOf(hipBone), skeleton.bones.indexOf(spineBone), skeleton.bones.indexOf(neckBone), 0);
+                    boneWeights.push(1, 0, 0, 0);
+                }
+                j += 3;
+            }
+
+            mesh.setVerticesData(BABYLON.VertexBuffer.MatricesIndicesKind, boneIndices);
+            mesh.setVerticesData(BABYLON.VertexBuffer.MatricesWeightsKind, boneWeights);
+        }
+
+        const setVertexDataForLimbBones = (mesh, skeleton, upperBone, lowerBone) => {
+            const boneIndices = [];
+            const boneWeights = [];
+            const meshPos = mesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+            let j = 0
+
+            for (let i = 0; i < mesh.getTotalVertices(); ++i) {
+                const x = meshPos[j];
+                const y = meshPos[j + 1];
+                const z = meshPos[j + 2];
+
+                if (y > 0) {
+                    boneIndices.push(skeleton.bones.indexOf(upperBone), skeleton.bones.indexOf(lowerBone), 0, 0);
+                    boneWeights.push(0.8, 0.2, 0, 0);
+                } else {
+                    boneIndices.push(skeleton.bones.indexOf(upperBone), skeleton.bones.indexOf(lowerBone), 0, 0);
+                    boneWeights.push(0.2, 0.8, 0, 0);
+                }
+                j += 3;
+            }
+
+            mesh.setVerticesData(BABYLON.VertexBuffer.MatricesIndicesKind, boneIndices);
+            mesh.setVerticesData(BABYLON.VertexBuffer.MatricesWeightsKind, boneWeights);
+        }
+
+        const createFace = (mesh, scene) => {
             const eyeTexture = new BABYLON.DynamicTexture("eyeTexture", { width: 100, height: 100 }, scene);
             eyeTexture.hasAlpha = true;
 
@@ -150,14 +262,14 @@
             eyeMaterial.diffuseTexture = eyeTexture;
             eyeMaterial.zOffset = -1;
 
-            const rightEye = BABYLON.DecalBuilder.CreateDecal("rightEye", head, {
+            const rightEye = BABYLON.DecalBuilder.CreateDecal("rightEye", mesh, {
                 position: new BABYLON.Vector3(0.1, 0.05, 0.1),
                 normal: new BABYLON.Vector3(0, 0, 1),
                 size: new BABYLON.Vector3(0.1, 0.1, 0.5)
             });
             rightEye.material = eyeMaterial;
 
-            const leftEye = BABYLON.DecalBuilder.CreateDecal("leftEye", head, {
+            const leftEye = BABYLON.DecalBuilder.CreateDecal("leftEye", mesh, {
                 position: new BABYLON.Vector3(-0.1, 0.05, 0.1),
                 normal: new BABYLON.Vector3(0, 0, 1),
                 size: new BABYLON.Vector3(0.1, 0.1, 0.5)
@@ -180,7 +292,7 @@
             hairMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
             hairMaterial.zOffset = -1;
 
-            const hair = BABYLON.DecalBuilder.CreateDecal("hair", head, {
+            const hair = BABYLON.DecalBuilder.CreateDecal("hair", mesh, {
                 position: new BABYLON.Vector3(0, 0.35, 0),
                 normal: new BABYLON.Vector3(0, 1, 0),
                 size: new BABYLON.Vector3(0.6, 0.7, 0.5)
@@ -205,7 +317,7 @@
             mouthMaterial.diffuseTexture = mouthTexture;
             mouthMaterial.zOffset = -1;
 
-            const mouth = BABYLON.DecalBuilder.CreateDecal("mouth", head, {
+            const mouth = BABYLON.DecalBuilder.CreateDecal("mouth", mesh, {
                 position: new BABYLON.Vector3(0, 0.0, 0.1),
                 normal: new BABYLON.Vector3(0, 0, 1),
                 size: new BABYLON.Vector3(0.1, 0.1, 0.5)
@@ -229,7 +341,7 @@
             jawMaterial.diffuseTexture = jawTexture;
             jawMaterial.zOffset = -1;
 
-            const jaw = BABYLON.DecalBuilder.CreateDecal("jaw", head, {
+            const jaw = BABYLON.DecalBuilder.CreateDecal("jaw", mesh, {
                 position: new BABYLON.Vector3(0, -0.06, 0.1),
                 normal: new BABYLON.Vector3(0, 0, 1),
                 size: new BABYLON.Vector3(0.1, 0.1, 0.5)
@@ -255,22 +367,99 @@
             cheekMaterial.diffuseTexture = cheekTexture;
             cheekMaterial.zOffset = -1;
 
-            const rightCheek = BABYLON.DecalBuilder.CreateDecal("rightCheek", head, {
+            const rightCheek = BABYLON.DecalBuilder.CreateDecal("rightCheek", mesh, {
                 position: new BABYLON.Vector3(0.15, -0.03, 0.1),
                 normal: new BABYLON.Vector3(0, 0, 1),
                 size: new BABYLON.Vector3(0.1, 0.1, 0.5)
             });
             rightCheek.material = cheekMaterial;
 
-            const leftCheek = BABYLON.DecalBuilder.CreateDecal("leftCheek", head, {
+            const leftCheek = BABYLON.DecalBuilder.CreateDecal("leftCheek", mesh, {
                 position: new BABYLON.Vector3(-0.15, -0.03, 0.1),
                 normal: new BABYLON.Vector3(0, 0, 1),
                 size: new BABYLON.Vector3(0.1, 0.1, 0.5)
             });
             leftCheek.material = cheekMaterial;
+        }
 
-            return scene;
+        const createWaveAnimation = (skeleton, scene) => {
+            const bone = skeleton.bones.find(b => b.name === "rightUpperArm");
+            if (!bone) return console.error("rightUpperArmBone not found");
+
+            const waveAnim = new BABYLON.Animation(
+                "rightUpperArmWave",
+                "rotation",
+                60,
+                BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
+            );
+
+            waveAnim.setKeys([
+                { frame: 0, value: new BABYLON.Vector3(0, 0, 0) },
+                { frame: 30, value: new BABYLON.Vector3(0, 0, Math.PI / 2) },
+                { frame: 60, value: new BABYLON.Vector3(0, 0, 0) },
+            ]);
+
+            // ボーンに登録して実行
+            bone.animations = [waveAnim];
+            scene.beginAnimation(bone, 0, 60, true);
         };
+
+        const drinkAnim = (body, skeleton, scene) => {
+            BABYLON.SceneLoader.ImportMesh(
+                "",                      // 読み込むメッシュの名前（すべてなら ""）
+                "./drink_can_model/",              // ベース URL
+                "scene.gltf",              // ファイル名
+                scene,
+                (meshes) => {
+                    const bottle = meshes[0];           // 読み込まれたボトル本体
+                    const bottlePivot = new BABYLON.TransformNode("bottlePivot", scene);
+
+                    // 1) まず親を body（キャラクターメッシュ）に
+                    bottlePivot.parent = body;
+
+                    // 2) Pivot の原点をリセット／スケール
+                    bottlePivot.position = BABYLON.Vector3.Zero();
+                    bottlePivot.rotation = BABYLON.Vector3.Zero();
+                    bottlePivot.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+
+                    // 3) ボトルのメッシュを Pivot の子に
+                    bottle.parent = bottlePivot;
+                    bottle.position = BABYLON.Vector3.Zero();
+
+                    // 4) 手の骨にアタッチ（オフセットには小さめの値を）
+                    const handBone = skeleton.bones.find(b => b.name === "rightHand");
+                    bottle.attachToBone(
+                        handBone,
+                        body,
+                        new BABYLON.Vector3(0, 1, 0.1),      // Y:5cm 上げて、Z:10cm 前に
+                        new BABYLON.Vector3(Math.PI / 6, 0, 0)    // X:30° 手前に傾ける
+                    );
+                }
+            );
+
+            // const bone = skeleton.bones.find(b => b.name === "rightUpperArm");
+            // if (!bone) return console.error("rightUpperArmBone not found");
+
+            // const waveAnim = new BABYLON.Animation(
+            //     "rightUpperArmWave",
+            //     "rotation",
+            //     60,
+            //     BABYLON.Animation.ANIMATIONTYPE_VECTOR3,
+            //     BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE
+            // );
+
+            // waveAnim.setKeys([
+            //     { frame: 0, value: new BABYLON.Vector3(0, 0, 0) },
+            //     { frame: 30, value: new BABYLON.Vector3(0, 0, Math.PI / 2) },
+            //     { frame: 60, value: new BABYLON.Vector3(0, 0, 0) },
+            // ]);
+
+            // // ボーンに登録して実行
+            // bone.animations = [waveAnim];
+            // scene.beginAnimation(bone, 0, 60, true);
+        };
+
         window.initFunction = async function () {
             var asyncEngineCreation = async function () {
                 try {
